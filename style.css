@@ -1,0 +1,38 @@
+input.addElement{
+    width: 20mm;
+    height: 20mm;
+    background-image: url(https://cdn1.iconfinder.com/data/icons/feather-2/24/plus-circle-256.png);
+    background-size: cover;
+    border-radius: 100%;
+    border-width: 0mm;
+    background-color: white;
+    border-color: white;
+    position: fixed;
+    bottom: 10mm;
+    right: 5mm; 
+}
+div.square {
+    width: 150px;
+    height: 150px;
+    background-color: white;
+    border: 2mm solid black;
+    text-align: center;
+    position: absolute;
+}
+input.textField{
+    width: 140px;
+    height: 70px;
+}
+button.buttonField{
+    width: 150px;
+    height: 30px;
+    background-color: white;
+    border-color: silver;
+}
+div.mainArea{
+    height: 700px;
+    width: 100%;
+    background-color: whitesmoke;
+    border: 2mm solid black;
+    position: relative;
+}
