@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingHorizontal="25dp"
+    android:paddingBottom="15dp"
+    android:paddingTop="40dp"
+    tools:context=".MainActivity"
+    style="@style/Background">
+
+    <LinearLayout
+        android:id="@+id/up_menu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            style="@style/MenuImage"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="My\nNotes"
+            android:textSize="48sp"
+            android:fontFamily="@font/raleway_medium"
+            style="@style/TextColor"/>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+               <com.google.android.material.card.MaterialCardView
+                   android:id="@+id/all"
+                   android:layout_width="130dp"
+                   android:layout_height="60dp"
+                   android:layout_marginEnd="5dp"
+                   style="@style/Stroke">
+
+                   <LinearLayout
+                       android:layout_width="match_parent"
+                       android:layout_height="wrap_content"
+                       android:layout_gravity="center"
+                       android:orientation="horizontal">
+
+                       <TextView
+                           android:layout_width="0dp"
+                           android:layout_height="wrap_content"
+                           android:layout_weight="1"
+                           android:text="All"
+                           android:textSize="20sp"
+                           android:fontFamily="@font/rubik_regular"
+                           android:gravity="center"
+                           style="@style/TextColor"/>
+
+                       <TextView
+                           android:layout_width="0dp"
+                           android:layout_height="wrap_content"
+                           android:layout_weight="1"
+                           android:text="23"
+                           android:textSize="20sp"
+                           android:fontFamily="@font/rubik_regular"
+                           android:gravity="center"
+                           style="@style/TextColor"/>
+
+                   </LinearLayout>
+
+               </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/important"
+                    android:layout_width="130dp"
+                    android:layout_height="60dp"
+                    android:layout_marginEnd="5dp"
+                    style="@style/Stroke">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Important"
+                        android:textSize="20sp"
+                        android:fontFamily="@font/rubik_regular"
+                        android:layout_gravity="center"
+                        style="@style/TextColor"/>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/recents"
+                    android:layout_width="130dp"
+                    android:layout_height="60dp"
+                    android:layout_marginEnd="5dp"
+                    style="@style/Stroke">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Resents"
+                        android:textSize="20sp"
+                        android:fontFamily="@font/rubik_regular"
+                        android:layout_gravity="center"
+                        style="@style/TextColor"/>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/trash"
+                    android:layout_width="130dp"
+                    android:layout_height="60dp"
+                    style="@style/Stroke">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Trash"
+                        android:textSize="20sp"
+                        android:fontFamily="@font/rubik_regular"
+                        android:layout_gravity="center"
+                        style="@style/TextColor"/>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragments_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/up_menu"
+        android:layout_alignParentBottom="true"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_alignParentBottom="true">
+
+        <LinearLayout
+            android:layout_width="160dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:background="@drawable/back_menu">
+
+            <ImageView
+                android:id="@+id/add"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                style="@style/AddNote"/>
+
+            <ImageView
+                android:id="@+id/add_audio"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                style="@style/AddAudioNote"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>
