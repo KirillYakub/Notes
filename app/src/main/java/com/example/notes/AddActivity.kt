@@ -253,8 +253,7 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
     @Throws(IOException::class)
     private fun dispatchCaptureImageIntent()
     {
-        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
-                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (makePhotoCurrentVersionPermission()) {
             val storageDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
             val imageFile = File.createTempFile(WorkWithSymbols.generateUniqueId(), ".jpg", storageDirectory)
             photoPath = imageFile.absolutePath
@@ -265,24 +264,18 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
             intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
             cameraActivityLauncher.launch(intent)
-        } else requestPermissions(
-            arrayOf(Manifest.permission.CAMERA,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            Permissions.requestCameraPermission
-        )
+        }
     }
 
     private fun selectImageCurrentVersionPermission() : Boolean
     {
         return when {
             Build.VERSION.SDK_INT >= 33 -> {
-                when {
-                    checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
-                            && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> true
+                when (PackageManager.PERMISSION_GRANTED) {
+                    checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) -> true
                     else -> {
                         requestPermissions(arrayOf(
-                            Manifest.permission.READ_MEDIA_IMAGES,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            Manifest.permission.READ_MEDIA_IMAGES),
                             Permissions.requestGalleryPermission)
                         false
                     }
@@ -297,6 +290,38 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
                             Manifest.permission.READ_EXTERNAL_STORAGE,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE),
                             Permissions.requestGalleryPermission)
+                        false
+                    }
+                }
+            }
+        }
+    }
+
+    private fun makePhotoCurrentVersionPermission() : Boolean
+    {
+        return when {
+            Build.VERSION.SDK_INT >= 33 -> {
+                when  {
+                    checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+                            checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED -> true
+                    else -> {
+                        requestPermissions(arrayOf(
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_MEDIA_IMAGES),
+                            Permissions.requestCameraPermission)
+                        false
+                    }
+                }
+            }
+            else -> {
+                when {
+                    checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+                            checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> true
+                    else -> {
+                        requestPermissions(arrayOf(
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            Permissions.requestCameraPermission)
                         false
                     }
                 }

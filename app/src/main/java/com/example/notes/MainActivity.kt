@@ -135,26 +135,49 @@ class MainActivity : AppCompatActivity(), OnDataSentListener
             .commit()
     }
 
+    private fun recordAudioCurrentVersionPermission() : Boolean
+    {
+        return when {
+            Build.VERSION.SDK_INT >= 33 -> {
+                when {
+                    checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                            && checkSelfPermission(Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED -> true
+                    else -> {
+                        requestPermissions(arrayOf(
+                            Manifest.permission.RECORD_AUDIO,
+                            Manifest.permission.READ_MEDIA_AUDIO),
+                            Permissions.requestAudioPermission)
+                        false
+                    }
+                }
+            }
+            else -> {
+                when {
+                    checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+                            checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> true
+                    else -> {
+                        requestPermissions(
+                            arrayOf(Manifest.permission.RECORD_AUDIO,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            Permissions.requestAudioPermission)
+                        false
+                    }
+                }
+            }
+        }
+    }
+
     private fun openAudioDialog()
     {
-        when {
-            checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED &&
-                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED ->
-            {
-                if(!this::audioDialog.isInitialized) {
-                    audioDialog = Dialog(this)
-                    audioDialog.setCanceledOnTouchOutside(false)
-                    audioDialog.setCancelable(false)
-                    audioDialog.setContentView(audioBinding.root)
-                    audioDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                }
-                openAudioDialogView()
+        if(recordAudioCurrentVersionPermission()) {
+            if(!this::audioDialog.isInitialized) {
+                audioDialog = Dialog(this)
+                audioDialog.setCanceledOnTouchOutside(false)
+                audioDialog.setCancelable(false)
+                audioDialog.setContentView(audioBinding.root)
+                audioDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             }
-            else -> requestPermissions(
-                arrayOf(Manifest.permission.RECORD_AUDIO,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                Permissions.requestAudioPermission
-            )
+            openAudioDialogView()
         }
     }
 
