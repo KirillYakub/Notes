@@ -3,7 +3,6 @@ package com.example.notes
 import android.annotation.SuppressLint
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,7 +32,7 @@ class NoteTasksAdapter(
                 }
                 deleteTask.setOnClickListener{
                     taskText.clearFocus()
-                    clickListener.onClickListener(task, adapterPosition)
+                    clickListener.onNoteElementsClickListener(task, adapterPosition)
                 }
                 taskText.addTextChangedListener(object : TextWatcher{
                     override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {

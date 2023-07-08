@@ -12,4 +12,7 @@
     <color name="green">#2DDA69</color>
     <color name="blue">#3DD6F2</color>
     <color name="paper">#F5E6A2</color>
+
+    <color name="sea">#276DFF</color>
+    <color name="medium_sea">#1C58D4</color>
 </resources>

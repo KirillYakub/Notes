@@ -2,8 +2,14 @@ package com.example.notes
 
 import android.Manifest
 import android.R.attr.*
+import android.app.AlarmManager
+import android.app.Dialog
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,29 +24,41 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.notes.databinding.ActivityAddNoteBinding
+import com.example.notes.databinding.NotificationDialogBinding
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import kotlin.random.Random
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 
 class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeListener
 {
     private lateinit var binding: ActivityAddNoteBinding
+    private lateinit var notificationBinding: NotificationDialogBinding
     private lateinit var photoAdapter: NotePhotoAdapter
     private lateinit var tasksAdapter: NoteTasksAdapter
+    private lateinit var noteAfterEdit: NotesData
     private lateinit var photoPath: String
+    private lateinit var notificationDialog: Dialog
 
+    private var instanceStateObjectPositionTag = "INSTANCE_STATE_OBJECT_POSITION_TAG"
+    private var instanceStateObjectTag = "INSTANCE_STATE_TAG"
+    private var saveNewNoteAfterPause: Boolean = false
     private var cardStyle: Int = BaseNotesDataStyle.cardStyle
     private var listStyle: Int = BaseNotesDataStyle.listStyle
     private var cameraStyle: Int = BaseNotesDataStyle.cameraStyle
     private var notePosition: Int? = null
-    private var noteForEdit: NotesData? = null
-    private var isOnBackPressed: Boolean = false
+    private var noteBeforeEdit: NotesData? = null
 
-    private var photosForDeleteWhenActivityDestroy = arrayListOf<String>()
+    private lateinit var dateList: ArrayList<String>
+    private lateinit var hoursList: ArrayList<String>
+    private lateinit var minutesList: ArrayList<String>
     private var photoList = arrayListOf<String>()
     private var taskList = arrayListOf<Task>()
+    private val appData = AppData(this)
 
     private val callback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
@@ -48,14 +66,26 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        if(this::noteAfterEdit.isInitialized) {
+            when (noteBeforeEdit) {
+                null -> outState.putInt(instanceStateObjectPositionTag, AppData.notesList.size - 1)
+                else -> outState.putInt(instanceStateObjectPositionTag, notePosition!!)
+            }
+            outState.putParcelable(instanceStateObjectTag, noteAfterEdit)
+        }
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
         binding = ActivityAddNoteBinding.inflate(layoutInflater)
+        notificationBinding = NotificationDialogBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         onBackPressedDispatcher.addCallback(this, callback)
-        noteForEditConfig()
+        noteForEditConfig(savedInstanceState)
     }
 
     override fun onStart()
@@ -67,7 +97,7 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
                 goBack()
             }
             notification.setOnClickListener {
-
+                createNotificationDialog()
             }
             camera.setOnClickListener {
                 dispatchCaptureImageIntent()
@@ -106,8 +136,8 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
 
     private fun goBack()
     {
-        AppData.notePositionForEditWhenFragmentUpdate = notePosition
-        isOnBackPressed = true
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
         finish()
     }
 
@@ -115,6 +145,19 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
     {
         super.onResume()
 
+        /*
+        If we paused our activity and resumed it after that we need to check are we work with new
+        note before it.
+        */
+        if(saveNewNoteAfterPause) {
+            noteForEditConfig()
+            saveNewNoteAfterPause = false
+        }
+        /*
+        This is a save from display photos that was deleted by user not in program.
+        If user paused app and delete photos in folders and after that returned to app
+        we need to check that files exists yet
+        */
         if(photoList.isNotEmpty()) {
             val deleteList = arrayListOf<String>()
             val deleteIndexList = arrayListOf<Int>()
@@ -129,92 +172,82 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
                 }
             }
             photoList.removeAll(deleteList.toSet())
-            if(!this::photoAdapter.isInitialized)
-                createPhotoAdapter()
-            else
-                if(deleteList.isNotEmpty())
+            when{
+                !this::photoAdapter.isInitialized -> createPhotoAdapter()
+                else -> if(deleteList.isNotEmpty())
                     photoAdapter.deleteItemsFromList(deleteList, deleteIndexList)
+            }
         }
+        /*
+        User can not set notification for not created note. For it note must be added to main
+        notifications list
+        */
+        if(noteBeforeEdit == null) binding.notification.visibility = View.GONE
     }
 
     override fun onPause()
     {
         super.onPause()
 
-        if(isOnBackPressed) {
-            val title: String = binding.title.text.toString()
-            val text = binding.text.text.toString()
-            if (title.isNotEmpty() || text.isNotEmpty() ||
-                photoList.isNotEmpty() || taskList.isNotEmpty()) {
-                var note = if (title.isNotEmpty() && text.isEmpty())
-                    NotesData(title = title)
-                else if (title.isEmpty() && text.isNotEmpty())
-                    NotesData(text = text)
-                else
-                    NotesData(title, text)
-
-                note.cardBackStyle = cardStyle
-                note.listStyle = listStyle
-                note.imageStyle = cameraStyle
-                note.photoList = photoList
-                note.taskList = taskList
-
-                if (noteForEdit == null) {
-                    note.noteId = generateUniqueId()
-                    AppData.notesList.add(note)
-                } else {
-                    note.noteId = noteForEdit!!.noteId
-                    note = NotesData(
-                        note,
-                        noteForEdit!!.isImportant,
-                        noteForEdit!!.isRecent,
-                        noteForEdit!!.isDelete
-                    )
-                    editNoteAtLists(note, notePosition!!)
-                }
+        val title: String = binding.title.text.toString()
+        val text = binding.text.text.toString()
+        if (title.isNotEmpty() || text.isNotEmpty() ||
+            photoList.isNotEmpty() || taskList.isNotEmpty()) {
+            var note = when {
+                title.isNotEmpty() && text.isEmpty() -> NotesData(title = title)
+                title.isEmpty() && text.isNotEmpty() -> NotesData(text = text)
+                else -> NotesData(title, text)
             }
-        }
-    }
 
-    override fun onDestroy()
-    {
-        super.onDestroy()
+            note.cardBackStyle = cardStyle
+            note.listStyle = listStyle
+            note.imageStyle = cameraStyle
+            note.photoList = photoList
+            note.taskList = taskList
 
-        if(!isOnBackPressed && photosForDeleteWhenActivityDestroy.isNotEmpty()) {
-            for(i in 0 until photosForDeleteWhenActivityDestroy.size)
-                deleteFileByPath(photosForDeleteWhenActivityDestroy[i])
+            /*
+            When we create note or edit old - that is not important, we create a local note with input
+            data and if we add new note we add this local note to our note list. If we edit note we
+            change our old note to new with update data. Important to know that we need to save data
+            to savedInstanceState if we change theme to night for example. For that we save note to
+            noteAfterEdit field and use it in correct method.
+            */
+            if (noteBeforeEdit == null) {
+                note.noteId = WorkWithSymbols.generateUniqueId()
+                AppData.notesList.add(note)
+                saveNewNoteAfterPause = true
+            } else {
+                note.noteId = noteBeforeEdit!!.noteId
+                note.notificationId = noteBeforeEdit!!.notificationId
+                note = NotesData(
+                    note,
+                    noteBeforeEdit!!.isImportant,
+                    noteBeforeEdit!!.isRecent,
+                    noteBeforeEdit!!.isDelete
+                )
+                editNoteAtLists(note, notePosition!!)
+            }
+            noteAfterEdit = note
         }
+        else
+            if(noteBeforeEdit != null) noteAfterEdit = noteBeforeEdit!!
+
+        appData.saveListData()
     }
 
     private fun editNoteAtLists(note: NotesData, position: Int)
     {
-        if(note.isImportant) {
+        //When our note stored in different lists we need to edit it in every list if we have changes in note data
+        if(note.isImportant)
             AppData.importantNotesList[
                     AppData.importantNotesList.indexOfFirst { it.noteId == note.noteId }] = note
-        }
         if(note.isRecent)
             AppData.resentsNotesList[
                     AppData.resentsNotesList.indexOfFirst { it.noteId == note.noteId}] = note
-
-        if(AppData.activeList == ActiveListForWork.allList)
-            AppData.notesList[position] = note
-        else
-            AppData.notesList[AppData.notesList.indexOfFirst { it.noteId == note.noteId}] = note
-    }
-
-    private fun generateUniqueId(): String
-    {
-        val size = 25
-        val characterSet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
-        val random = Random(System.nanoTime())
-        val id = StringBuilder()
-
-        for (i in 0 until size)
-        {
-            val rIndex = random.nextInt(characterSet.length)
-            id.append(characterSet[rIndex])
+        when(AppData.activeList) {
+            ActiveListForWork.allList -> AppData.notesList[position] = note
+            else -> AppData.notesList[AppData.notesList.indexOfFirst { it.noteId == note.noteId}] = note
         }
-        return id.toString()
     }
 
     @Throws(IOException::class)
@@ -223,7 +256,7 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
         if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
                 checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             val storageDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-            val imageFile = File.createTempFile(generateUniqueId(), ".jpg", storageDirectory)
+            val imageFile = File.createTempFile(WorkWithSymbols.generateUniqueId(), ".jpg", storageDirectory)
             photoPath = imageFile.absolutePath
             val imageUri = FileProvider.getUriForFile(
                 this,
@@ -235,23 +268,48 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
         } else requestPermissions(
             arrayOf(Manifest.permission.CAMERA,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            AppData.requestCameraPermission
+            Permissions.requestCameraPermission
         )
+    }
+
+    private fun selectImageCurrentVersionPermission() : Boolean
+    {
+        return when {
+            Build.VERSION.SDK_INT >= 33 -> {
+                when {
+                    checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+                            && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> true
+                    else -> {
+                        requestPermissions(arrayOf(
+                            Manifest.permission.READ_MEDIA_IMAGES,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            Permissions.requestGalleryPermission)
+                        false
+                    }
+                }
+            }
+            else -> {
+                when {
+                    checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                            && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> true
+                    else -> {
+                        requestPermissions(arrayOf(
+                            Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            Permissions.requestGalleryPermission)
+                        false
+                    }
+                }
+            }
+        }
     }
 
     private fun dispatchSelectImageIntent()
     {
-        if (checkSelfPermission(
-                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-            checkSelfPermission(
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (selectImageCurrentVersionPermission()) {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             galleryActivityLauncher.launch(intent)
-        } else requestPermissions(
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            AppData.requestGalleryPermission
-        )
+        }
     }
 
     private val cameraActivityLauncher = registerForActivityResult(
@@ -275,7 +333,7 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
     private fun copyFileByUri(uri: Uri)
     {
         val storageDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        val imageFile = File.createTempFile(generateUniqueId(), ".jpg", storageDirectory)
+        val imageFile = File.createTempFile(WorkWithSymbols.generateUniqueId(), ".jpg", storageDirectory)
 
         val inputStream = contentResolver.openInputStream(uri)
         val outputStream = FileOutputStream(imageFile)
@@ -288,6 +346,7 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
         inputStream.close()
         outputStream.close()
 
+        //We need to get path to photo to local field if it was copied successfully
         if (imageFile.length() > 0) {
             photoPath = imageFile.absolutePath
             addImagesToPhotoList()
@@ -322,14 +381,13 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
 
     private fun addImagesToPhotoList()
     {
-        if(this::photoPath.isInitialized && photoPath.isNotEmpty()) {
+        //We can add photo to list only if photo was created, so we have a path to this photo
+        if(photoPath.isNotEmpty()) {
             photoList.add(photoPath)
-            if (photoList.size == 1) {
-                createPhotoAdapter()
-                photosForDeleteWhenActivityDestroy = photoList
-            } else {
-                photoAdapter.addPhoto(photoPath)
-                photosForDeleteWhenActivityDestroy.add(photoPath)
+            when {
+                //If out note has photoList we need to create adapter to display it
+                !this::photoAdapter.isInitialized -> createPhotoAdapter()
+                else -> photoAdapter.addPhoto(photoPath)
             }
         }
     }
@@ -338,21 +396,51 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
     {
         val task = Task()
         taskList.add(task)
-        if(taskList.size == 1)
-            createTaskAdapter()
-        else
-            tasksAdapter.addTask(task)
+        when {
+            //If out note has taskList we need to create adapter to display it
+            !this::tasksAdapter.isInitialized -> createTaskAdapter()
+            else -> tasksAdapter.addTask(task)
+        }
     }
 
-    private fun noteForEditConfig()
+    private fun noteForEditConfig(savedInstanceState: Bundle? = null)
     {
-        val noteFromFragment = if(Build.VERSION.SDK_INT >= 33)
-            intent.getParcelableExtra(
-                AppData.noteFromFragmentToActivity, NotesData::class.java)
-        else
-            intent.getParcelableExtra(
-                AppData.noteFromFragmentToActivity)
+        val noteFromFragment: NotesData? = when {
+            /*
+            When savedInstanceState is initialized we get data from it like notePosition from list
+            to edit and note like object for edit
+            */
+            savedInstanceState != null -> {
+                notePosition = savedInstanceState.getInt(instanceStateObjectPositionTag)
+                savedInstanceState.getParcelable(instanceStateObjectTag)
+            }
+            /*
+            When we pause our app note data will save to list and sharedPreferences...
+            But if we reopen our activity and note is new in our list, that is we do not edit note,
+            that note will have a duplicate in list. For that when note was created at first time
+            we need to know that if page will be reopen we will work with this note like we want
+            to edit it.
+             */
+            saveNewNoteAfterPause -> {
+                notePosition = AppData.notesList.size - 1
+                AppData.notesList[notePosition!!] as NotesData
+            }
+            //If we want to edit note we get data with intent from out fragment with list of notes
+            else -> {
+                notePosition = intent.getIntExtra(AppData.noteFromFragmentToActivityPosition, 0)
+                when {
+                    Build.VERSION.SDK_INT >= 33 -> intent.getParcelableExtra(
+                        AppData.noteFromFragmentToActivity, NotesData::class.java
+                    )
+                    else -> intent.getParcelableExtra(AppData.noteFromFragmentToActivity)
+                }
+            }
+        }
 
+        /*
+        We get data about our note for edit to
+        our local activity fields because every note has it own style and lists like photo and tasks
+        */
         if(noteFromFragment != null) {
             binding.apply {
                 title.setText(noteFromFragment.title)
@@ -365,32 +453,15 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
                     R.color.paper -> setPaperTheme()
                 }
             }
-            notePosition = intent.getIntExtra(AppData.notePosition, 0)
 
-            if(AppData.resentsNotesList.indexOfFirst { it.noteId == noteFromFragment.noteId} == -1) {
-                noteFromFragment.isRecent = true
-                AppData.resentsNotesList.add(noteFromFragment)
-                if(AppData.resentsNotesList.size > AppData.maxResentsNotes)
-                    AppData.resentsNotesList.removeAt(0)
-            }
+            WorkWithSymbols.addNoteToResents(noteFromFragment) //Add note to recent after open it
             if(noteFromFragment.photoList.isNotEmpty())
                 photoList = noteFromFragment.photoList
             if(noteFromFragment.taskList.isNotEmpty()) {
                 taskList = noteFromFragment.taskList
                 createTaskAdapter()
             }
-            noteForEdit = noteFromFragment
-        }
-    }
-
-    private fun deleteFileByPath(path: String)
-    {
-        try {
-            val file = File(path)
-            if (file.exists())
-                file.delete()
-        }catch (_:IOException){
-        }catch (_:IllegalArgumentException){
+            noteBeforeEdit = noteFromFragment
         }
     }
 
@@ -449,19 +520,23 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
             , R.drawable.back_paper, R.drawable.back_paper, R.color.paper)
     }
 
-    override fun onClickListener(element: Any, position: Int) {
+    override fun onNoteElementsClickListener(element: Any, position: Int) {
         if(element is Task) {
             taskList.removeAt(position)
             tasksAdapter.removeTaskByPosition(position)
         }
         else if(element is String) {
             val intent = Intent(this, PhotoActivity::class.java)
-            intent.putExtra(AppData.notePhoto, element)
+            intent.putExtra(AppData.notePhotoToShow, element)
+            intent.putExtra(AppData.noteStyleToShow, cardStyle)
             startActivity(intent)
         }
     }
 
-    override fun onLongClickListener(element: Any, position: Int) {
+    override fun onClickListener(element: NotesListsData, position: Int) {
+    }
+
+    override fun onLongClickListener(element: NotesListsData, position: Int) {
     }
 
     override fun afterTextChangedListener(text: String, position: Int) {
@@ -470,5 +545,149 @@ class AddActivity : AppCompatActivity(), OnElementsClickListener, OnTaskChangeLi
 
     override fun isCompleteChangeListener(change: Boolean, position: Int) {
         taskList[position].isComplete = change
+    }
+
+    private fun generateAllDatesOfYear()
+    {
+        dateList = arrayListOf()
+        var currentDate = LocalDateTime.now()
+        val nextYear = currentDate.plusYears(1)
+        val formatter = DateTimeFormatter.ofPattern("dd.MM.yy")
+        while (currentDate.isBefore(nextYear)) {
+            dateList.add(currentDate.format(formatter))
+            currentDate = currentDate.plusDays(1)
+        }
+    }
+
+    private fun generateMinuteArray()
+    {
+        minutesList = arrayListOf()
+        for (minute in 0..59)
+            minutesList.add(minute.toString().padStart(2, '0'))
+    }
+
+    private fun generateHoursArray()
+    {
+        hoursList = arrayListOf()
+        for (hour in 0..23)
+            hoursList.add(hour.toString().padStart(2, '0'))
+    }
+
+    private fun createNotificationDialog()
+    {
+        if(!this::notificationDialog.isInitialized)
+        {
+            notificationDialog = Dialog(this)
+            notificationDialog.setContentView(notificationBinding.root)
+            notificationDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+            generateAllDatesOfYear()
+            generateHoursArray()
+            generateMinuteArray()
+            setNotificationPickersValues()
+        }
+        openNotificationDialog()
+    }
+
+    private fun setNotificationPickersValues()
+    {
+        notificationBinding.apply {
+            days.minValue = 0
+            days.maxValue = dateList.size - 1
+            days.displayedValues = dateList.toTypedArray()
+            days.wrapSelectorWheel = false
+
+            hours.minValue = 0
+            hours.maxValue = hoursList.size - 1
+            hours.displayedValues = hoursList.toTypedArray()
+            hours.wrapSelectorWheel = false
+
+            minutes.minValue = 0
+            minutes.maxValue = minutesList.size - 1
+            minutes.displayedValues = minutesList.toTypedArray()
+            minutes.wrapSelectorWheel = false
+        }
+    }
+
+    private fun openNotificationDialog()
+    {
+        if(setNotificationPermission()) {
+            notificationBinding.apply {
+                when (noteBeforeEdit!!.notificationId) {
+                    0 -> notificationSwitcher.isChecked = false
+                    else -> notificationSwitcher.isChecked = true
+                }
+                notificationSwitcher.setOnCheckedChangeListener { _, isChecked ->
+                    when {
+                        isChecked -> {
+                            val date = dateList[days.value].split(".")
+                            val numbers = date.map { it.toInt() }
+                            val calendar = Calendar.getInstance()
+                            calendar.set(
+                                ("20" + numbers[2]).toInt(), numbers[1] - 1, numbers[0],
+                                hoursList[hours.value].toInt(), minutesList[minutes.value].toInt(), 0
+                            )
+                            when (Calendar.getInstance().before(calendar)) {
+                                true -> scheduleNotification(calendar.timeInMillis, true)
+                                else -> notificationSwitcher.isChecked = false
+                            }
+                        }
+                        else -> scheduleNotification(alarmOn = false)
+                    }
+                }
+            }
+            notificationDialog.show()
+        }
+    }
+
+    private fun scheduleNotification(time: Long = 0, alarmOn: Boolean)
+    {
+        val notificationId = if(alarmOn) Notifications.generateUniqueId() else noteBeforeEdit!!.notificationId
+        val intent = Intent(applicationContext, NotificationsReceiver::class.java)
+        intent.putExtra(
+            Notifications.notificationIdTag,
+            notificationId)
+        intent.putExtra(
+            Notifications.notificationTitleTag,
+            when {
+                noteBeforeEdit!!.title.isNotEmpty() ||
+                        noteBeforeEdit!!.text.isNotEmpty() -> getString(R.string.notification_name)
+                noteBeforeEdit!!.taskList.isNotEmpty() -> getString(R.string.notification_task_name)
+                else -> getString(R.string.notification_photo_name)
+            })
+        val pendingIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        if(alarmOn) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                time,
+                pendingIntent
+            )
+        }
+        else alarmManager.cancel(pendingIntent)
+        noteBeforeEdit!!.notificationId = if (alarmOn) notificationId else 0
+    }
+
+    private fun setNotificationPermission() : Boolean
+    {
+        return when {
+            Build.VERSION.SDK_INT >= 33 -> {
+                when (PackageManager.PERMISSION_GRANTED) {
+                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) -> true
+                    else -> {
+                        requestPermissions(arrayOf(
+                            Manifest.permission.POST_NOTIFICATIONS),
+                            Permissions.requestNotificationPermission)
+                        false
+                    }
+                }
+            }
+            else -> true
+        }
     }
 }

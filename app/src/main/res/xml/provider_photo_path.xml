@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-
     <external-path
-        name="NotesPictures"
-        path="Android/data/com.example.notes/files/Pictures"/>
-
+        name="note_pictures"
+        path="Android/data/com.example.notes/files/Pictures" />
+    <external-path
+        name="note_audio"
+        path="Android/data/com.example.notes/files/Audio" />
 </paths>

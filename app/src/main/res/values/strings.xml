@@ -1,5 +1,32 @@
 <resources>
-    <string name="app_name">Notes</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="app_name" translatable="false">Notes</string>
+    <string name="my_notes">My\nNotes</string>
+    <string name="all">All</string>
+    <string name="important">Important</string>
+    <string name="resents">Resents</string>
+    <string name="delete">Trash</string>
+
+    <string name="your_audio">Your audio</string>
+    <string name="cancel_audio">Cancel</string>
+    <string name="save_audio">Save file</string>
+    <string name="save">Save</string>
+    <string name="timer_value" translatable="false">00:00</string>
+
+    <string name="options">Options</string>
+    <string name="priority">Priority</string>
+    <string name="display">Display list like</string>
+    <string name="options_text">Text</string>
+    <string name="audio">Audio</string>
+    <string name="grid">Grid</string>
+    <string name="list">List</string>
+
+    <string name="add_note">Add Note</string>
+    <string name="title">Title</string>
+    <string name="text">Note text</string>
+    <string name="task">Add task</string>
+
+    <string name="notification">Select Date/Time</string>
+    <string name="notification_name">Don\'t forget your task</string>
+    <string name="notification_task_name">Don\'t forget about your list of tasks</string>
+    <string name="notification_photo_name">Don\'t forget about your photo list</string>
 </resources>

@@ -32,7 +32,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:fontFamily="@font/raleway_medium"
-                android:text="Add Note"
+                android:text="@string/add_note"
                 android:textSize="32sp" />
 
             <ImageView
@@ -61,36 +61,36 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="15dp"
-                    tools:listitem="@layout/photo_list_tem" />
+                    tools:listitem="@layout/photo_list_item" />
 
                 <LinearLayout
-                    android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
                     <EditText
                         android:id="@+id/title"
+                        style="@style/TextColor"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:hint="Title"
+                        android:background="@null"
+                        android:fontFamily="@font/rubik_regular"
+                        android:hint="@string/title"
                         android:lineSpacingExtra="5dp"
                         android:textSize="32sp"
-                        android:fontFamily="@font/rubik_regular"
-                        android:textStyle="bold"
-                        android:background="@null"
-                        style="@style/TextColor"/>
+                        android:textStyle="bold" />
 
                     <EditText
                         android:id="@+id/text"
+                        style="@style/TextColor"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginVertical="15dp"
-                        android:hint="Note text"
-                        android:lineSpacingExtra="5dp"
-                        android:textSize="26sp"
-                        android:fontFamily="@font/rubik_regular"
                         android:background="@null"
-                        style="@style/TextColor"/>
+                        android:fontFamily="@font/rubik_regular"
+                        android:hint="@string/text"
+                        android:lineSpacingExtra="5dp"
+                        android:textSize="26sp" />
 
                 </LinearLayout>
 

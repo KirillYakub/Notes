@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/photo_panel"
+    tools:context=".PhotoActivity"
+    android:padding="10dp"
     style="@style/Background">
 
     <com.ortiz.touchview.TouchImageView
@@ -16,7 +19,6 @@
         android:id="@+id/delete_panel"
         android:layout_width="160dp"
         android:layout_height="80dp"
-        android:layout_margin="10dp"
         android:background="@drawable/photo_paper_back"
         android:layout_alignParentTop="true">
 

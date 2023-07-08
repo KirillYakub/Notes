@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ListsFragment"
-    android:background="@color/white">
+    tools:context=".ListsFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -30,8 +29,7 @@
                     android:layout_height="35dp"
                     android:layout_gravity="center"
                     android:button="@null"
-                    android:background="@drawable/important_note_check"
-                    android:buttonTint="@color/black" />
+                    style="@style/ImportantButton" />
 
             </FrameLayout>
 
@@ -40,21 +38,21 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:src="@drawable/delete"/>
+                style="@style/TrashButton"/>
 
             <ImageView
                 android:id="@+id/delete"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:src="@drawable/archive"/>
+                style="@style/ArchiveButton"/>
 
             <ImageView
                 android:id="@+id/return_item"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:src="@drawable/return_item"/>
+                style="@style/ReturnItemButton"/>
 
         </LinearLayout>
 

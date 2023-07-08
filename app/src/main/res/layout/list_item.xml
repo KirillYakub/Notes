@@ -27,6 +27,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="24sp"
+                android:visibility="gone"
                 android:text="Your Note title"
                 android:fontFamily="@font/raleway_medium"
                 style="@style/TextColor"/>
@@ -36,6 +37,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
+                android:visibility="gone"
                 android:text="Your note"
                 android:fontFamily="@font/raleway_regular"
                 style="@style/TextColor"/>
