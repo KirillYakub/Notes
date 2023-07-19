@@ -49,8 +49,6 @@ class MainActivity : AppCompatActivity(), OnDataSentListener
 
         AppData.activeList = ActiveListForWork.allList
         if(!AppData.firstInput) {
-            AppData.resentsNotesList = arrayListOf()
-            AppData.importantNotesList = arrayListOf()
             AppData.firstInput = true
             appData.loadListData()
         }

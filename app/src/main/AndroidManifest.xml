@@ -43,7 +43,9 @@
 
         <activity
             android:name=".OptionsActivity"
-            android:exported="true">
+            android:screenOrientation="portrait"
+            android:exported="true"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="OptionsActivity" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -51,7 +53,9 @@
         </activity>
         <activity
             android:name=".PhotoActivity"
-            android:exported="true">
+            android:screenOrientation="portrait"
+            android:exported="true"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="PhotoActivity" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -59,8 +63,10 @@
         </activity>
         <activity
             android:name=".AddActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
-            android:windowSoftInputMode="stateHidden">
+            android:windowSoftInputMode="stateHidden"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="AddActivity" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -68,7 +74,9 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:screenOrientation="portrait"
+            android:exported="true"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
