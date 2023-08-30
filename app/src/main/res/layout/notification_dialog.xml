@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notification"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="10dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        style="@style/Options">
+
+       <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:orientation="vertical">
+
+           <TextView
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               android:layout_marginVertical="25dp"
+               android:gravity="center"
+               android:text="@string/notification"
+               android:textSize="26sp"
+               android:fontFamily="@font/raleway_medium"
+               style="@style/AppTitleColor"/>
+
+           <LinearLayout
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               android:layout_marginHorizontal="50dp">
+
+               <com.shawnlin.numberpicker.NumberPicker
+                   android:id="@+id/days"
+                   android:layout_width="0dp"
+                   android:layout_height="match_parent"
+                   android:layout_weight="2"
+                   app:np_dividerThickness="0dp"
+                   app:np_itemSpacing="10dp"
+                   app:np_selectedTextSize="24dp"
+                   app:np_textSize="24dp"
+                   app:np_wheelItemCount="3"
+                   style="@style/Picker"/>
+
+               <com.shawnlin.numberpicker.NumberPicker
+                   android:id="@+id/hours"
+                   android:layout_width="0dp"
+                   android:layout_height="match_parent"
+                   android:layout_weight="1"
+                   app:np_dividerThickness="0dp"
+                   app:np_itemSpacing="10dp"
+                   app:np_selectedTextSize="24dp"
+                   app:np_textSize="24dp"
+                   app:np_wheelItemCount="3"
+                   style="@style/Picker"/>
+
+               <com.shawnlin.numberpicker.NumberPicker
+                   android:id="@+id/minutes"
+                   android:layout_width="0dp"
+                   android:layout_height="match_parent"
+                   android:layout_weight="1"
+                   app:np_dividerThickness="0dp"
+                   app:np_itemSpacing="10dp"
+                   app:np_selectedTextSize="24dp"
+                   app:np_textSize="24dp"
+                   app:np_wheelItemCount="3"
+                   style="@style/Picker"/>
+
+           </LinearLayout>
+           
+           <com.google.android.material.switchmaterial.SwitchMaterial
+               android:id="@+id/notification_switcher"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_marginVertical="25dp"
+               android:layout_gravity="center"
+               android:thumb="@drawable/switch_thumb"
+               app:track="@drawable/switch_track"/>
+
+       </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</RelativeLayout>

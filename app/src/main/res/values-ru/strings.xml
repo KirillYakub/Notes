@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name" translatable="false">Notes</string>
+    <string name="my_notes">Мои\nЗаметки</string>
+    <string name="all">Все</string>
+    <string name="important">Важные</string>
+    <string name="resents">Недавние</string>
+    <string name="delete">Корзина</string>
+
+    <string name="your_audio">Ваше аудио</string>
+    <string name="cancel_audio">Отмена</string>
+    <string name="save_audio">Сохранить файл</string>
+    <string name="save">Сохранить</string>
+
+    <string name="options">Настройки</string>
+    <string name="priority">Приоритет</string>
+    <string name="display">Отображать список как</string>
+    <string name="options_text">Текст</string>
+    <string name="audio">Аудио</string>
+    <string name="grid">Сетка</string>
+    <string name="list">Список</string>
+
+    <string name="add_note">Добавить</string>
+    <string name="title">Заголовок</string>
+    <string name="text">Текст заметки</string>
+    <string name="task">Новая задача</string>
+    <string name="notification">Выберите Дату/Время</string>
+    <string name="notification_name">Не забывайте о вашей задаче</string>
+    <string name="notification_task_name">Не забывайте о вашем списке задач</string>
+    <string name="notification_photo_name">Не забывайте о вашем списке фотографий</string>
+</resources>

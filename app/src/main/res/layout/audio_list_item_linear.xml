@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:id="@+id/audio_panel"
+    style="@style/AudioCardBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="15dp">
+
+        <TextView
+            android:id="@+id/audio_length"
+            style="@style/TimerTextColor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/rubik_medium"
+            android:textSize="28sp"
+            android:text="00:00" />
+
+        <TextView
+            android:id="@+id/audio_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="@string/your_audio"
+            android:fontFamily="@font/rubik_regular"
+            style="@style/TimerTextColor"/>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
